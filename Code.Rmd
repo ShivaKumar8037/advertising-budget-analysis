@@ -1,0 +1,198 @@
+---
+title: "Linear Regression on Advertising Data"
+output: html_notebook
+author: Shiva Kumar Pendem
+---
+
+
+```{r Importing_libs}
+library(ggplot2)
+library(car)
+library(vctrs)
+library(plotly)
+```
+
+------------------------------------------------------------------------
+
+## Task 1: Load and visualize the data
+
+### Loading the Data and getting summary
+
+```{r Loadingdata}
+
+advertising_data <- read.csv("Advertising.csv", colClasses = c("NULL", NA,NA,NA,NA))
+
+head(advertising_data)
+
+summary(advertising_data)
+
+
+
+```
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## Task 2: Simple linear regression
+
+```{r Plotting}
+
+
+par(mfrow=c(1,3))
+
+
+plot(advertising_data$TV, advertising_data$Sales, main="TV vs Sales", xlab="TV", ylab="Sales")
+plot(advertising_data$Radio, advertising_data$Sales, main="Radio vs Sales", xlab="Radio", ylab="Sales")
+plot(advertising_data$Newspaper, advertising_data$Sales, main="Newspaper vs Sales", xlab="Newspaper", ylab="Sales")
+
+
+par(mfrow=c(1,1))
+```
+
+```{r Multimodel}
+multi_model <- lm(Sales ~ TV + Radio + Newspaper, data = advertising_data)
+summary(multi_model)
+
+```
+
+### Plotting with Regression Line
+
+```{r Plotting with Regression line}
+par(mfrow=c(1,3))
+
+# TV vs Sales
+plot(advertising_data$TV, advertising_data$Sales, main="TV vs Sales", xlab="TV", ylab="Sales")
+model_tv <- lm(Sales ~ TV, data=advertising_data)
+abline(model_tv, col="red")
+
+# Radio vs Sales
+plot(advertising_data$Radio, advertising_data$Sales, main="Radio vs Sales", xlab="Radio", ylab="Sales")
+model_radio <- lm(Sales ~ Radio, data=advertising_data)
+abline(model_radio, col="red")
+
+# Newspaper vs Sales
+plot(advertising_data$Newspaper, advertising_data$Sales, main="Newspaper vs Sales", xlab="Newspaper", ylab="Sales")
+model_newspaper <- lm(Sales ~ Newspaper, data=advertising_data)
+abline(model_newspaper, col="red")
+
+par(mfrow=c(1,1))
+```
+
+### Based on the the results:
+
+The coefficients of TV, Radio and Newspaper are 0.045, 0.188, -0.001 respectively.
+
+TV and Radio contribute to sales because the coeff is significant, which we can't say for Newspaper.
+
+Based on the t-values:
+
+There's a strong positive relationship between sales and the advertising budgets for both TV and Radio, as indicated by their large positive t-values. The Newspaper advertising budget doesn't show a statistically significant relationship with sales, given its t-value close to 0. Thus, while TV and Radio budgets have significant positive relationships with sales, the Newspaper budget doesn't seem to have a meaningful impact on sales. \*\*\* \\
+
+## Question 3: Multiple Linear Regression
+
+```{r}
+# install.packages(c("car", "rgl"))
+
+summary(multi_model)
+```
+
+### Revisiting the results:
+
+Again, Looking at the Coefficients of TV and radio tells us the they contribute more to the sales because of their corresponding slopes is more when compared to Newspaper's slope.
+
+```{r Newspaper_VS_Sales}
+plot(advertising_data$Newspaper, advertising_data$Sales, main="Newspaper vs Sales", xlab="Newspaper", ylab="Sales")
+model_newspaper <- lm(Sales ~ Newspaper, data=advertising_data)
+abline(model_newspaper, col="red")
+summary(model_newspaper)
+
+```
+### Multiple and Simple Regression for Newspaper regressor.
+
+When performing the simple regression on newspaper alone, it gives us the coeff of 0.0546. Indicating a good relationship
+
+The p-value is 0.0015 (When newspaper is isolated)
+
+But when we do multiple linear regression the slope of newspaper is -0.001037 and the p-value is 0.86. Indicating, that it doesn't have much affect on sales.
+
+```{r}
+correlation_matrix <- cor(advertising_data[, c('Sales','TV', 'Radio', 'Newspaper')])
+print(correlation_matrix)
+```
+
+Looking at the correlation between Newspaper and other regressor tells us it has weak correlation.
+
+```{r Rsquared for all }
+r2 = summary(multi_model)$r.squared
+print(paste("R-squared value is:", r2))
+
+
+```
+
+The R-Squared Value is 0.89
+
+```{r 3D}
+
+scatter3d(Sales ~ TV + Radio, data = advertising_data)
+# scatter3d(Sales ~ TV + Newspaper, data = advertising_data)
+# scatter3d(Sales ~ Newspaper + Radio, data = advertising_data)
+
+```
+
+------------------------------------------------------------------------
+
+## Task 4: Models with interaction terms
+
+```{r TV&Radio_Interaction}
+synergy_model <- lm(Sales ~ TV + Radio + Newspaper + TV*Radio, data = advertising_data)
+summary(synergy_model)
+
+```
+
+### Synergy between TV & Radio:
+
+After including the TV x Radio term in the multi-linear regression. It gives the coefficient of <TV:Radio> to be 0.001087, although the slope in minimum, the relationship of <TV:Radio> can't be ignored because the corresponding significance code is \*\*\* and the p-value is less and almost as TV's p-value.
+
+```{r testing}
+#testing all possible variations of  interactions
+testing_model <- lm(Sales ~ TV + Radio + Newspaper + TV*Radio + Radio*Newspaper + Newspaper*TV, data = advertising_data)
+summary(testing_model)
+
+```
+
+### Testing all possible variations of interactions.
+
+When I included all possible variations of interactions between regressor , it also suggested me that <TV:Newspaper> interaction is also significant based on the significance code '\**'. It gave a R-squared value of 0.96* \*\*.
+
+### Task 5: Optimize Sales
+
+```{r TVandRadio}
+finalmodel <- lm(Sales ~ TV + Radio  + TV*Radio , data = advertising_data)
+summary(finalmodel)
+
+```
+
+```{r Viz}
+max(advertising_data$Sales)
+
+print(paste('The maximum sales of existing data is', max(advertising_data$Sales), 'units'))
+
+```
+
+```{r ConfidenceInterval}
+
+confint(finalmodel, 'TV', level=0.95)
+confint(finalmodel, 'Radio', level=0.95)
+```
+
+Above is the calculation for Confidence interval for TV and Radio features.
+
+```{r PredictModel}
+
+predict(finalmodel, data.frame('TV'=145.534, 'Radio' = 154.465))
+
+```
+
+
+
