@@ -1,5 +1,6 @@
 # Linear Regression Analysis on Advertising Budgets
 
+![Alt text for your image](./3d.png)
 ## Overview
 
 In this project, I delved deep into the world of linear regression, exploring the intricacies of how advertising budgets across various media channels impact sales. Using R as the primary tool for analysis, I examined a dataset that captures the essence of sales and advertising dynamics across different markets.
